@@ -6,11 +6,14 @@
         xmlns:local="clr-namespace:TicTacToe"
         xmlns:view="clr-namespace:TicTacToe.View"
         mc:Ignorable="d"
-        Title="ChatApp"
+        Title="Kółko i krzyżyk"
         SizeToContent="WidthAndHeight">
     <Grid x:Name="Main">
-        <view:Login>
+        <view:Login x:Name="Login">
             
         </view:Login>
+        <view:TicTacToeBoard x:Name="Game" Visibility="Collapsed">
+
+        </view:TicTacToeBoard>
     </Grid>
 </Window>

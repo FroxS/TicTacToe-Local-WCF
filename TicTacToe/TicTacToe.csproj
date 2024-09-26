@@ -62,7 +62,7 @@
     <Compile Include="Domain\ETicTacToePos.cs" />
     <Compile Include="Domain\User.cs" />
     <Compile Include="Service\TicTacToeGame.cs" />
-    <Compile Include="TicTacToeService.cs" />
+    <Compile Include="Service\TicTacToeService.cs" />
     <Compile Include="Service\ObservableObject.cs" />
     <Compile Include="Service\RelayCommand.cs" />
     <Compile Include="ViewModel\TicTacToeViewModel.cs" />
@@ -71,6 +71,12 @@
     </Compile>
     <Compile Include="View\TicTacToeBoard.xaml.cs">
       <DependentUpon>TicTacToeBoard.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\TicTacToeControl.xaml.cs">
+      <DependentUpon>TicTacToeControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\WaitControl.xaml.cs">
+      <DependentUpon>WaitControl.xaml</DependentUpon>
     </Compile>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -89,6 +95,14 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="View\TicTacToeBoard.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\TicTacToeControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\WaitControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -7,6 +7,7 @@ using System.Linq;
 using System.ServiceModel;
 using TicTacToe.Service;
 using TicTacToe.Domain;
+using System.Threading.Tasks;
 
 namespace TicTacToe
 {
@@ -43,19 +44,22 @@ namespace TicTacToe
 
         #region Metods
 
-        public void Connect(User user)
+        public async Task<char> ConnectAsync(User user)
         {
-            _callBack = OperationContext.Current.GetCallbackChannel<ITicTacToeCallBack>();
+            _callBack =OperationContext.Current.GetCallbackChannel<ITicTacToeCallBack>();
             if(_callBack != null)
             {
                 user.Char = 'X';
                 _clients.Add(user.UserId, _callBack);
                 _users.Add(user);
-                _clients?.ToList().ForEach(c => 
-                {
-                    if(c.Key != user.UserId)
-                        c.Value.UserJoined(user);
+                await Task.Run(() => {
+                    _clients?.ToList().ForEach(c =>
+                    {
+                        if (c.Key != user.UserId)
+                            c.Value.UserJoined(user);
+                    });
                 });
+                
                 Console.WriteLine($"{user.Name} just connected");
                 if(_users.Count() == 2)
                 {
@@ -63,8 +67,9 @@ namespace TicTacToe
                     _canConnect = false;
                     StartGame();
                 }
-
+                return user.Char;
             }
+            return char.MinValue;
         }
 
         private void StartGame()
@@ -77,18 +82,50 @@ namespace TicTacToe
             });
         }
 
-        public void Move(ETicTacToePos pos, string player)
+        public async Task<bool> MoveAsync(ETicTacToePos pos, string player)
         {
             if (_game == null)
-                return;
-            Console.WriteLine($"Player {_users.FirstOrDefault(u => u.UserId == player).Name} move pos: {pos}");
-            _clients?.ToList().ForEach(c =>
-            {
-                if (c.Key != player)
-                    c.Value.UserMoved(pos, GetUser(player).Char);
+                return false;
 
+            Console.WriteLine($"Player {_users.FirstOrDefault(u => u.UserId == player).Name} move pos: {pos}");
+
+            var moved = _game.MakeMove((int)pos);
+            if (!moved)
+            {
+                return false;
+            }
+            
+
+            await Task.Run(() =>
+            {
+                _clients?.ToList().ForEach(c =>
+                {
+                    c.Value.UserMoved(pos, GetUser(player).Char);
+                });
             });
 
+            if (_game.CheckWin())
+            {
+                _clients?.ToList().ForEach(c =>
+                {
+                    User user = GetUser(c.Key);
+                    if (_game.GetCurrentPlayer() == user.Char)
+                        c.Value.Win();
+                    else
+                        c.Value.Lost();
+                });
+                return true;
+            }
+            _game.SwitchPlayer();
+            if (_game.IsBoardFull())
+            {
+                _clients?.ToList().ForEach(c =>
+                {
+                    c.Value.Draw();
+                });
+                return true;
+            }
+            return true;
         }
 
         public ObservableCollection<User> GetConnectedUsers()

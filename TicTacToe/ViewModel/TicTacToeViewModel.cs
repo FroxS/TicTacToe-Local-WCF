@@ -6,10 +6,8 @@ using System.Text;
 using TicTacToe.Service;
 using TicTacToe.Contract;
 using System.Threading.Tasks;
-using System.Collections.ObjectModel;
 using System.Windows.Input;
 using TicTacToe.Domain;
-using System.Windows.Documents;
 
 namespace TicTacToe.ViewModel
 {
@@ -30,6 +28,10 @@ namespace TicTacToe.ViewModel
 
         private ITicTacToeService _proxy;
 
+        private MainWindow _mainWindow;
+
+        private bool _waitingForPlayer = false;
+        private bool _end = false;
         #endregion
 
         #region Public properties
@@ -58,12 +60,35 @@ namespace TicTacToe.ViewModel
             set => SetProperty(ref _myMove, value);
         }
 
+        public char Player
+        {
+            get => _me?.Char ?? char.MinValue;
+        }
+
+        public string Name
+        {
+            get => _me?.Name ?? "";
+        }
+
+        public bool WaitingForPlayer
+        {
+            get => _waitingForPlayer;
+            set => SetProperty(ref _waitingForPlayer, value);
+        }
+
+        public bool End
+        {
+            get => _end;
+            set => SetProperty(ref _end, value);
+        }
 
         #endregion
 
         #region Command
 
         public ICommand MoveCommand { get; private set; }
+
+        public ICommand StartGameCommand { get; private set; }
 
         #endregion
 
@@ -72,14 +97,15 @@ namespace TicTacToe.ViewModel
         /// <summary>
         /// Default constructor
         /// </summary>
-        public TicTacToeViewModel()
+        public TicTacToeViewModel(MainWindow mainWindow)
         {
+            _mainWindow = mainWindow;
             RelayCommand.DefaultActionOnError = (ex) =>
             {
                 SetMessage(ex.Message);
             };
-
-            MoveCommand = new RelayCommand<ETicTacToePos>(Move, (o) => MyMove);
+            MoveCommand = new AsyncRelayCommand<ETicTacToePos>(Move, (o) => MyMove);
+            StartGameCommand = new AsyncRelayCommand(() => StartSearchGame());
         }
 
         #endregion
@@ -88,44 +114,81 @@ namespace TicTacToe.ViewModel
 
         public void UserMoved(ETicTacToePos pos, char player)
         {
-            int move = (int)pos;
-            int row = (move - 1) / 3;
-            int col = (move - 1) % 3;
-            Board[pos] = player.ToString();
-            OnPropertyChanged(nameof(Board));
-            SetMessage($"player {player} add pos:{pos}");
-            MyMove = _me.Char != player;
+            SettoBoard(pos, player);
+            MyMove = player != _me.Char;
+            if(!MyMove)
+                SetMessage($"Oczekiwanie na ruch gracza");
+            else
+                SetMessage("Twoja kolej");
         }
 
         public void UserJoined(User user)
         {
-            SetMessage($"player {user.Name} joined");
+            bool isGirl = false;
+            string name = user.Name.ToLower();
+            if (name[name.Length - 1] == 'a')
+                isGirl = true;
+            SetMessage($"Do gry dołączył{(isGirl ? "a" : "")} {user.Name}");
         }
 
         public void StartGame(User opponent, char player, bool start)
         {
+            WaitingForPlayer = false;
             Opponent = opponent;
-            SetMessage($"Start game, your opponent is  {opponent.Name}");
+            SetMessage($"Gra wystartowała, twój przeciwnik to  {opponent.Name}");
             Board = new Board();
             MyMove = start;
+            if(MyMove)
+                SetMessage("Twoja kolej");
+            else
+                SetMessage($"Oczekiwanie na ruch gracza");
+        }
+
+        public void Win()
+        {
+            SetMessage("Gratulacje wygrałeś");
+            MyMove = false;
+        }
+
+        public void Lost()
+        {
+            SetMessage("Nestety przegrałeś");
+            MyMove = false;
+        }
+
+        public void Draw()
+        {
+            SetMessage("Gra zakończyła remisem");
+            MyMove = false;
         }
 
         #endregion
 
         #region Command
 
-        private void Move(ETicTacToePos pos)
+        private async Task Move(ETicTacToePos pos)
         {
             if (MyMove)
             {
-                if (Board[pos] == "")
+                if (Board[pos] == char.MinValue)
                 {
-                    _proxy.Move(pos, _me.UserId);
-                    Board[pos] = _me.Char.ToString();
+                    var result = await _proxy.MoveAsync(pos, _me.UserId);
+                    if (result)
+                    {
+                        SettoBoard(pos, _me.Char);
+                        MyMove = false;
+                    }
+                    
                 }
                     
             }
             
+        }
+
+        private void SettoBoard(ETicTacToePos pos, char player)
+        {
+            Board[pos] = player;
+            OnPropertyChanged(nameof(Board));
         }
 
         #endregion
@@ -134,25 +197,80 @@ namespace TicTacToe.ViewModel
 
         private void SetMessage(string message)
         {
-            Message += "\n\r " + message;
+            Message =  message;
+        }
+
+        private void SetTitle(string title)
+        {
+            _mainWindow.Dispatcher.Invoke(() =>
+            {
+                _mainWindow.Title = title;
+            });
         }
 
         #endregion
 
         #region Client Server method
 
-        public void RunServer()
+        public async Task StartSearchGame()
         {
-            var uris = new Uri[1];
-            string adr = GetAddress();
-            uris[0] = new Uri(adr);
-            ITicTacToeService service = new TicTacToeService();
-            ServiceHost host = new ServiceHost(service, uris);
-            var binding = new NetTcpBinding(SecurityMode.None);
-            host.AddServiceEndpoint(typeof(ITicTacToeService), binding, String.Empty);
-            host.Opened += Host_Opened;
-            host.Open();
-            Task.Run(() => { StartListeningServer(); });
+            try
+            {
+
+                bool runned = true;
+                string foundedAddress = FindAddress();
+                if (string.IsNullOrEmpty(foundedAddress))
+                {
+                    WaitingForPlayer = true;
+                    runned = RunServer();
+                }
+                if (runned)
+                {
+                    var user = new User()
+                    {
+                        TimeCreated = DateTime.Now,
+                        Name = Environment.UserName
+                    };
+
+                    runned = await RunClientAsync(user);
+                }
+                if(runned)
+                {
+                    _mainWindow.SwitchView();
+                }
+                else
+                {
+                    System.Windows.MessageBox.Show("Nie udało się połączyć. spróbujemy ponownie");
+                    StartSearchGame();
+                }
+
+            }catch(Exception ex)
+            {
+                System.Windows.MessageBox.Show(ex.Message);
+            }
+        }
+
+        public bool RunServer()
+        {
+            try
+            {
+                var uris = new Uri[1];
+                string adr = GetAddress();
+                uris[0] = new Uri(adr);
+                ITicTacToeService service = new TicTacToeService();
+                ServiceHost host = new ServiceHost(service, uris);
+                var binding = new NetTcpBinding(SecurityMode.None);
+                host.AddServiceEndpoint(typeof(ITicTacToeService), binding, String.Empty);
+                host.Opened += Host_Opened;
+                host.Open();
+                Task.Run(() => { StartListeningServer(); });
+                return true;
+            }
+            catch(Exception ex)
+            {
+                return false;
+            }
+           
         }
 
         private void Host_Opened(object sender, EventArgs e)
@@ -160,20 +278,33 @@ namespace TicTacToe.ViewModel
             Console.WriteLine("Server Run");
         }
 
-        public void RunClient(User user)
+        public async Task<bool> RunClientAsync(User user)
         {
             _me = user;
             var uri = GetAddress(FindAddress());
-            var callBack = new InstanceContext(this/*new TicTacToeCallBack()*/);
-            var binding = new NetTcpBinding(SecurityMode.None);
+            var callBack = new InstanceContext(this);
+            var binding = new NetTcpBinding(SecurityMode.None)
+            {
+                SendTimeout = TimeSpan.FromSeconds(5), 
+                ReceiveTimeout = TimeSpan.FromMinutes(5)
+            };
             var chanel = new DuplexChannelFactory<ITicTacToeService>(callBack, binding);
             var endpoint = new EndpointAddress(uri);
             var proxy = chanel.CreateChannel(endpoint);
             if (proxy != null)
             {
-                _proxy = proxy;
-                proxy.Connect(user);
+                char c = await proxy.ConnectAsync(user);
+                if(c != char.MinValue)
+                {
+                    _me.Char = c;
+                    _proxy = proxy;
+                    OnPropertyChanged(nameof(Player));
+                    OnPropertyChanged(nameof(Name));
+                    SetTitle($"[{c}] {user.Name}");
+                    return true;
+                }
             }
+            return false;
         }
 
         private string FindAddress()
@@ -182,6 +313,7 @@ namespace TicTacToe.ViewModel
             try
             {
                 UdpClient udpClient = new UdpClient();
+                udpClient.Client.ReceiveTimeout = 5000;
                 udpClient.EnableBroadcast = true;
                 IPEndPoint ep = new IPEndPoint(IPAddress.Broadcast, SEARCH_SERVER_PORT);
                 byte[] request = Encoding.UTF8.GetBytes(REQUEST_NAME_SEARCH_SERVER);
@@ -206,7 +338,7 @@ namespace TicTacToe.ViewModel
         {
             if (string.IsNullOrEmpty(ip))
                 ip = GetLocalIPAddress();
-            return $"net.tcp://{ip}:{SERVER_PORT}/TicTacToeService/"; //"net.tcp://localhost:6565/MessageService";
+            return $"net.tcp://{ip}:{SERVER_PORT}/TicTacToeService/";
         }
 
         private string GetLocalIPAddress()

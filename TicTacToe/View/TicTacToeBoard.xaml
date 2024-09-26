@@ -6,9 +6,10 @@
              xmlns:local="clr-namespace:TicTacToe.View"
              xmlns:domain="clr-namespace:TicTacToe.Domain"
              mc:Ignorable="d" 
-             MinWidth="200"
-             MinHeight="200"
-             Background="Gray">
+             MinWidth="500"
+             MinHeight="500"
+             Background="#3d3d3d"
+             Foreground="White">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -16,65 +17,30 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" >
-            <Label Content="{Binding Opponent.Name, UpdateSourceTrigger=PropertyChanged}" />
+        
+        <StackPanel Orientation="Horizontal" Grid.Row="0" Margin="10 5">
+            <TextBlock Text="{Binding Message, UpdateSourceTrigger=PropertyChanged}" />
         </StackPanel>
 
-        <Grid Grid.Row="1">
+        <local:TicTacToeControl Grid.Row="1"
+                                IsEnabled="{Binding MyMove, UpdateSourceTrigger=PropertyChanged}"
+                                WaitingForOpponents="{Binding WaitingForPlayer, UpdateSourceTrigger=PropertyChanged}"
+                                Board="{Binding Board, UpdateSourceTrigger=PropertyChanged}"
+                                IsHitTestVisible="True"
+                                ClickCommand="{Binding MoveCommand}"
+                                Player="{Binding Player, Mode=OneWay}"
+                                >
+        </local:TicTacToeControl>
 
-            <Grid.RowDefinitions>
-                <RowDefinition/>
-                <RowDefinition/>
-                <RowDefinition/>
-            </Grid.RowDefinitions>
+        <Grid Grid.Row="2" Height="100" Visibility="Collapsed" >
+            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled">
+                <TextBox TextWrapping="Wrap"
+                         Margin="5"
+                         IsReadOnly="True"
+                         Text="{Binding Message, UpdateSourceTrigger=PropertyChanged}"/>
 
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
-            </Grid.ColumnDefinitions>
-
-            <Button Content="{Binding Board.TL, UpdateSourceTrigger=PropertyChanged}"
-                    Command="{Binding MoveCommand}" CommandParameter="{x:Static domain:ETicTacToePos.TL}"
-                    Grid.Row="0" Grid.Column="0"/>
-
-            <Button Content="{Binding Board.TM, UpdateSourceTrigger=PropertyChanged}"
-                    Command="{Binding MoveCommand}" CommandParameter="{x:Static domain:ETicTacToePos.TM}"
-                    Grid.Row="0" Grid.Column="1"/>
-
-            <Button Content="{Binding Board.TR, UpdateSourceTrigger=PropertyChanged}"
-                    Command="{Binding MoveCommand}" CommandParameter="{x:Static domain:ETicTacToePos.TR}"
-                    Grid.Row="0" Grid.Column="2"/>
-
-
-            <Button Content="{Binding Board.ML, UpdateSourceTrigger=PropertyChanged}"
-                    Command="{Binding MoveCommand}" CommandParameter="{x:Static domain:ETicTacToePos.ML}"
-                    Grid.Row="1" Grid.Column="0"/>
-
-            <Button Content="{Binding Board.MM, UpdateSourceTrigger=PropertyChanged}"
-                    Command="{Binding MoveCommand}" CommandParameter="{x:Static domain:ETicTacToePos.MM}"
-                    Grid.Row="1" Grid.Column="1"/>
-
-            <Button Content="{Binding Board.MR, UpdateSourceTrigger=PropertyChanged}"
-                    Command="{Binding MoveCommand}" CommandParameter="{x:Static domain:ETicTacToePos.MR}"
-                    Grid.Row="1" Grid.Column="2"/>
-
-
-            <Button Content="{Binding Board.BL, UpdateSourceTrigger=PropertyChanged}"
-                    Command="{Binding MoveCommand}" CommandParameter="{x:Static domain:ETicTacToePos.BL}"
-                    Grid.Row="2" Grid.Column="0"/>
-
-            <Button Content="{Binding Board.BM, UpdateSourceTrigger=PropertyChanged}"
-                    Command="{Binding MoveCommand}" CommandParameter="{x:Static domain:ETicTacToePos.BM}"
-                    Grid.Row="2" Grid.Column="1"/>
-
-            <Button Content="{Binding Board.BR, UpdateSourceTrigger=PropertyChanged}"
-                    Command="{Binding MoveCommand}" CommandParameter="{x:Static domain:ETicTacToePos.BR}"
-                    Grid.Row="2" Grid.Column="2"/>
-        </Grid>
-
-        <Grid Grid.Row="2" >
-            <TextBlock TextWrapping="Wrap"  Text="{Binding Message, UpdateSourceTrigger=PropertyChanged}"/>
+            </ScrollViewer>
         </Grid>
 
     </Grid>

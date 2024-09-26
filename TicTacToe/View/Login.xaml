@@ -5,20 +5,19 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:TicTacToe.View"
              mc:Ignorable="d" 
-             Background="Gray" 
              MinWidth="500"
-             MinHeight="300">
-    <Grid>
-        <StackPanel HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    Orientation="Vertical">
-            <TextBox x:Name="UserName" Width="200"
-                     Margin="10"/>
-            <Button x:Name="LoginBtn" Content="Login"
-                    Click="LoginBtn_Click"/>
+             MinHeight="300"
+             Background="#3d3d3d">
+    
+    <Grid Loaded="Grid_Loaded">
+        <local:WaitControl/>
+        <TextBlock Text="Oczekiwanie na połączenie ..."
+                   Foreground="White"
+                   Margin="5"
+                   VerticalAlignment="Bottom"
+                   HorizontalAlignment="Center"/>
+        
 
-            <Button x:Name="RunServerBtn" Content="RunServer"
-                    Click="RunServerBtn_Click"/>
-        </StackPanel> 
     </Grid>
+    
 </UserControl>

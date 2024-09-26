@@ -7,7 +7,7 @@ using System.Runtime.CompilerServices;
 
 namespace TicTacToe.Service
 {
-    internal class ObservableObject : INotifyPropertyChanged, INotifyPropertyChanging
+    public class ObservableObject : INotifyPropertyChanged, INotifyPropertyChanging
     {
         public event PropertyChangedEventHandler PropertyChanged = (sender, e) => { };
         public event PropertyChangingEventHandler PropertyChanging = (sender, e) => { };

@@ -7,12 +7,14 @@ using System.Windows.Input;
 
 namespace TicTacToe.Service
 {
-    internal class RelayCommand<T> : ICommand
+    public class RelayCommand<T> : ICommand
     {
         #region Private Properties
 
         protected readonly Predicate<T> _canExecute;
         protected readonly Action<T> _execute;
+
+        public event EventHandler CanExecuteChanged;
 
         #endregion
 
@@ -68,14 +70,14 @@ namespace TicTacToe.Service
 
         }
 
-        public event EventHandler CanExecuteChanged
+        public void InvokeCanExecuteChanged(object obj, EventArgs args)
         {
-            add { CommandManager.RequerySuggested += value; }
-            remove { CommandManager.RequerySuggested -= value; }
+            CanExecuteChanged?.Invoke(obj, args);
+
         }
     }
 
-    internal class RelayCommand : RelayCommand<object>
+    public class RelayCommand : RelayCommand<object>
     {
         public RelayCommand(Action execute) : base((o) => execute(), (o) => true)
         {
@@ -87,7 +89,7 @@ namespace TicTacToe.Service
         }
     }
 
-    internal class AsyncRelayCommand : ICommand
+    public class AsyncRelayCommand : RelayCommand
     {
         #region Private Properties
 
@@ -96,8 +98,6 @@ namespace TicTacToe.Service
         private bool _isExecuting;
 
         private readonly Func<Task> _callback;
-
-        protected readonly Predicate<object> _canExecute;
 
         #endregion
 
@@ -109,27 +109,25 @@ namespace TicTacToe.Service
             set
             {
                 _isExecuting = value;
-                CanExecuteChanged?.Invoke(this, new EventArgs());
+                InvokeCanExecuteChanged(this, new EventArgs());
             }
         }
 
-        public event EventHandler CanExecuteChanged;
 
         #endregion
 
         #region Constructors
 
-        public AsyncRelayCommand(Func<Task> callback, Action<Exception> onException = null)
+        public AsyncRelayCommand(Func<Task> callback, Action<Exception> onException = null): this(callback, null, onException)
         {
             _onException = onException;
             _callback = callback;
         }
 
-        public AsyncRelayCommand(Func<Task> callback, Predicate<object> canExecute, Action<Exception> onException = null)
+        public AsyncRelayCommand(Func<Task> callback, Func<bool> canExecute, Action<Exception> onException = null): base(() => { }, canExecute)
         {
             _onException = onException;
             _callback = callback;
-            _canExecute = canExecute;
         }
 
         #endregion
@@ -145,7 +143,7 @@ namespace TicTacToe.Service
 
         #region Public methods
 
-        public bool CanExecute(object parameter)
+        public override bool CanExecute(object parameter)
         {
             try
             {
@@ -164,7 +162,7 @@ namespace TicTacToe.Service
 
         }
 
-        public async void Execute(object parameter)
+        public async override void Execute(object parameter)
         {
             IsExecuting = true;
             try
@@ -186,11 +184,9 @@ namespace TicTacToe.Service
 
     }
 
-    internal class AsyncRelayCommand<T> : ICommand
+    public class AsyncRelayCommand<T> : RelayCommand<T>
     {
         #region Private Properties
-
-        protected readonly Predicate<T> _canExecute;
 
         private readonly Action<Exception> _onException;
 
@@ -208,17 +204,15 @@ namespace TicTacToe.Service
             set
             {
                 _isExecuting = value;
-                CanExecuteChanged?.Invoke(this, new EventArgs());
+                InvokeCanExecuteChanged(this, new EventArgs());
             }
         }
-
-        public event EventHandler CanExecuteChanged;
 
         #endregion
 
         #region Constructors
 
-        public AsyncRelayCommand(Func<T, Task> callback, Predicate<T> canExecute = null, Action<Exception> onException = null)
+        public AsyncRelayCommand(Func<T, Task> callback, Predicate<T> canExecute = null, Action<Exception> onException = null): base((o) => { },canExecute)
         {
             _onException = onException;
             _callback = callback;
@@ -251,9 +245,9 @@ namespace TicTacToe.Service
 
         #region Public methods
 
-        public bool CanExecute(object parameter) => !IsExecuting;
+        public override bool CanExecute(object parameter) => !IsExecuting;
 
-        public async void Execute(object parameter)
+        public override async void Execute(object parameter)
         {
             IsExecuting = true;
 
