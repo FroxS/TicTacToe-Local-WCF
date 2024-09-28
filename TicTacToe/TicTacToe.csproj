@@ -58,13 +58,18 @@
     </ApplicationDefinition>
     <Compile Include="Contract\ITicTacToeService.cs" />
     <Compile Include="Contract\ITicTacToeCallBack.cs" />
+    <Compile Include="Conventers\BoolToVisibleConventer.cs" />
+    <Compile Include="Conventers\BaseValueConventer.cs" />
     <Compile Include="Domain\Board.cs" />
     <Compile Include="Domain\ETicTacToePos.cs" />
+    <Compile Include="Domain\IMainWindow.cs" />
     <Compile Include="Domain\User.cs" />
+    <Compile Include="Service\ObjectHost.cs" />
     <Compile Include="Service\TicTacToeGame.cs" />
     <Compile Include="Service\TicTacToeService.cs" />
     <Compile Include="Service\ObservableObject.cs" />
     <Compile Include="Service\RelayCommand.cs" />
+    <Compile Include="ViewModel\TicTacToeGameViewModel.cs" />
     <Compile Include="ViewModel\TicTacToeViewModel.cs" />
     <Compile Include="View\Login.xaml.cs">
       <DependentUpon>Login.xaml</DependentUpon>

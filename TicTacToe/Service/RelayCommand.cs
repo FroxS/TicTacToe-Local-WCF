@@ -83,7 +83,7 @@ namespace TicTacToe.Service
         {
         }
 
-        public RelayCommand(Action execute, Func<bool> canExecute) : base((o) => execute(), (o) => canExecute())
+        public RelayCommand(Action execute, Func<bool> canExecute) : base((o) => execute(), (o) => canExecute == null ? true : canExecute())
         {
 
         }
@@ -113,6 +113,7 @@ namespace TicTacToe.Service
             }
         }
 
+        public bool InBackground { get; set; } = true;
 
         #endregion
 
@@ -128,6 +129,7 @@ namespace TicTacToe.Service
         {
             _onException = onException;
             _callback = callback;
+
         }
 
         #endregion
@@ -136,7 +138,12 @@ namespace TicTacToe.Service
 
         protected async Task ExecuteAsync(object parameter)
         {
-            await _callback();
+            if (InBackground)
+            {
+                await Task.Run(async () => await _callback());
+            }
+            else
+                await _callback();
         }
 
         #endregion

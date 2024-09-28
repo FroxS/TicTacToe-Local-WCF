@@ -1,19 +1,22 @@
 ﻿using TicTacToe.ViewModel;
 using System.Windows;
+using TicTacToe.Domain;
+using TicTacToe.Service;
+using System.Windows.Threading;
 
 namespace TicTacToe
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow : Window, IMainWindow
     {
         #region Properties
 
-        internal TicTacToeViewModel ViewModel 
+        public IGameServieVM ViewModel 
         {
-            get => DataContext as TicTacToeViewModel;
-            set => DataContext = value; 
+            get => GetVM();
+            private set => DataContext = value; 
         }
 
         #endregion
@@ -23,14 +26,28 @@ namespace TicTacToe
         public MainWindow()
         {
             InitializeComponent();
-            ViewModel = new TicTacToeViewModel(this);
+            ViewModel = new TicTacToeViewModel();
+            ObjectHost.Setup(this);
+            ObjectHost.Set(Dispatcher);
+            RelayCommand.DefaultActionOnError = (ex) =>
+            {
+                ViewModel?.SetMessage(ex.Message);
+            };
+            
         }
 
         #endregion
 
         #region Method
 
-        internal void SwitchView()
+        private IGameServieVM GetVM()
+        {
+            IGameServieVM vm = null;
+            Dispatcher.Invoke(() => { vm = DataContext as IGameServieVM; });
+            return vm;
+        }
+
+        public void SwitchView()
         {
             Dispatcher.Invoke(() =>
             {

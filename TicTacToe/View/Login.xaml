@@ -4,19 +4,79 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:TicTacToe.View"
+             xmlns:conv="clr-namespace:TicTacToe.Conventers"
+             xmlns:vm="clr-namespace:TicTacToe.ViewModel"
              mc:Ignorable="d" 
              MinWidth="500"
              MinHeight="300"
-             Background="#3d3d3d">
+             Foreground="White"
+             Background="#3d3d3d"
+             d:DataContext="{d:DesignInstance Type=vm:TicTacToeViewModel}">
+    <UserControl.Resources>
+        <Style TargetType="{x:Type ComboBox}">
+            <Setter Property="Background" Value="#3d3d3d"/>
+        </Style>
+        <Style TargetType="{x:Type Button}">
+            <Setter Property="Background" Value="#3d3d3d"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style TargetType="{x:Type Label}">
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+    </UserControl.Resources>
     
-    <Grid Loaded="Grid_Loaded">
-        <local:WaitControl/>
-        <TextBlock Text="Oczekiwanie na połączenie ..."
-                   Foreground="White"
-                   Margin="5"
+    <Grid >
+        <local:WaitControl Visibility="{Binding IsTaskRunning, UpdateSourceTrigger=PropertyChanged, Converter={conv:BoolToVisibleConventer}}"/>
+        <TextBlock Margin="5"
+                   Text="{Binding Message, UpdateSourceTrigger=PropertyChanged}"
                    VerticalAlignment="Bottom"
                    HorizontalAlignment="Center"/>
-        
+
+
+        <Grid VerticalAlignment="Center"
+              HorizontalAlignment="Right"
+              Margin="10"
+              >
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <GroupBox Header="Server"   
+                      Grid.Row="0"
+                      Padding="10 5"
+                      IsEnabled="{Binding CanRunServer, UpdateSourceTrigger=PropertyChanged}"
+                      BorderBrush="White"
+                      BorderThickness=".5">
+                <Button Command="{Binding RunServerCommand}"
+                        Content="Start"
+                        Margin="5"/>
+            </GroupBox>
+
+            <GroupBox Header="Klient"
+                      Grid.Row="1"
+                      IsEnabled="{Binding CanJoin, UpdateSourceTrigger=PropertyChanged}"
+                      Padding="10 5"
+                      BorderBrush="White"
+                      BorderThickness=".5">
+                <StackPanel>
+                    <Label Content="Dostępne servery:" />
+
+                    <ComboBox ItemsSource="{Binding AviableServers}"
+                              SelectedItem="{Binding SelectedServer}"
+                              Margin="5"
+                              DropDownOpened="ComboBox_DropDownOpened">
+                    </ComboBox>
+                    
+                    <Button Command="{Binding JoinCommand}"
+                            Margin="5"
+                            Content="Dołącz"/>
+                </StackPanel>
+                
+            </GroupBox>
+
+        </Grid>
+
+
 
     </Grid>
     

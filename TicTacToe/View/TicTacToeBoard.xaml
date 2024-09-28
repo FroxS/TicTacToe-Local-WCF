@@ -4,12 +4,13 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:TicTacToe.View"
-             xmlns:domain="clr-namespace:TicTacToe.Domain"
+             xmlns:vm="clr-namespace:TicTacToe.ViewModel"
              mc:Ignorable="d" 
              MinWidth="500"
              MinHeight="500"
              Background="#3d3d3d"
-             Foreground="White">
+             Foreground="White"
+             d:DataContext="{d:DesignInstance Type=vm:TicTacToeViewModel}">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -22,7 +23,10 @@
             <TextBlock Text="{Binding Message, UpdateSourceTrigger=PropertyChanged}" />
         </StackPanel>
 
-        <local:TicTacToeControl Grid.Row="1"
+        <Grid Grid.Row="1"
+              DataContext="{Binding Game, UpdateSourceTrigger=PropertyChanged}"
+              >
+            <local:TicTacToeControl 
                                 IsEnabled="{Binding MyMove, UpdateSourceTrigger=PropertyChanged}"
                                 WaitingForOpponents="{Binding WaitingForPlayer, UpdateSourceTrigger=PropertyChanged}"
                                 Board="{Binding Board, UpdateSourceTrigger=PropertyChanged}"
@@ -30,7 +34,9 @@
                                 ClickCommand="{Binding MoveCommand}"
                                 Player="{Binding Player, Mode=OneWay}"
                                 >
-        </local:TicTacToeControl>
+            </local:TicTacToeControl>
+        </Grid>
+        
 
         <Grid Grid.Row="2" Height="100" Visibility="Collapsed" >
             <ScrollViewer VerticalScrollBarVisibility="Auto"

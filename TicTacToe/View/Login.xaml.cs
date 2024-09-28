@@ -2,6 +2,9 @@
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using TicTacToe.Domain;
+using TicTacToe.Service;
+using TicTacToe.ViewModel;
 
 namespace TicTacToe.View
 {
@@ -19,17 +22,30 @@ namespace TicTacToe.View
         public Login()
         {
             InitializeComponent();
-            _window = (MainWindow) Application.Current.MainWindow;
         }
 
 
         private void Grid_Loaded(object sender, RoutedEventArgs e)
         {
-            var vm = _window.ViewModel;
-            Task.Run(() => 
+            IMainWindow vm = ObjectHost.MainVindow;
+            if(vm?.ViewModel != null) 
             {
-                vm.StartSearchGame();
-            });
+                Task.Run(() =>
+                {
+                    vm.ViewModel.StartSearchGame();
+                });
+            }
+            
+        }
+
+        private void ComboBox_DropDownOpened(object sender, EventArgs e)
+        {
+            TicTacToeViewModel vm =DataContext as TicTacToeViewModel;
+            if (vm != null)
+            {
+                Task.Run(() => { vm.FillServers(); });
+            }
+                
         }
     }
 }

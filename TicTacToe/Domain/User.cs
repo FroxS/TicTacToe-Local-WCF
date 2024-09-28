@@ -7,6 +7,8 @@ namespace TicTacToe
         public User()
         {
             UserId = Guid.NewGuid().ToString().Split('-')[4];
+            TimeCreated = DateTime.Now;
+            Name = Environment.UserName;
         }
 
         public string UserId { get; set; }
